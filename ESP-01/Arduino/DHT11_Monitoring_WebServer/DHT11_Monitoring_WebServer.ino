@@ -153,9 +153,12 @@ int buildResponse(float temp,float  humidity)
   {
     sprintf(responseBuffer,
       "<html>\n" \
-          "\t<meta name=\"MCU\" content=\"ESP8266\">\n"\
-          "\t<meta name=\"BOARD\" content=\"ESP-01\">\n"\
-          "\t<meta name=\"DEVICE\" content=\"DHT11v1.0\">\n"\
+          "\t<head>\n"\
+          "\t\t<meta name=\"MCU\" content=\"ESP8266\">\n"\
+          "\t\t<meta name=\"BOARD\" content=\"ESP-01\">\n"\
+          "\t\t<meta name=\"DEVICE\" content=\"DHT11v1.0\">\n"\
+          "\t\t<meta http-equiv=\"refresh\" content=\"5\">\n"
+          "\t</head>\n"\
           "\t<body>\n"\
               "\t\t<p>Temperature=%5.2f</p>\n"\
               "\t\t<p>Humidity=%5.2f</p>\n"\ 
@@ -168,8 +171,9 @@ int buildResponse(float temp,float  humidity)
     sprintf(responseBuffer,
       "<ROOT>\n" \
           "\t<meta name=\"MCU\" content=\"ESP8266\" />\n"\
-          "\t<meta name=\"BOARD\" content=\"ESP-01\" />\n"\
-          "\t<meta name=\"DEVICE\" content=\"DHT11v1.0\" />\n"\
+          "\t<meta name=\"BOARD\"  comment=\"Build-In LED (TX pin)\" content=\"ESP-01\" />\n"\
+          "\t<meta name=\"MODULE\" comment=\"Temperature and Humidity sensor\" content=\"DHT11 v1.0\" />\n"\
+          "\t<meta name=\"refresh\" comment=\"Refrash data every n secconds\" content=\"5\" />\n"\
           "\t<MESUREMENT>\n"\
               "\t\t<Item type=\"Temperature\" value=\"%5.2f\" />\n"\
               "\t\t<Item type=\"Humidity\" value=\"%5.2f\" />\n"\
@@ -180,16 +184,18 @@ int buildResponse(float temp,float  humidity)
   else if(g_responseType == ERROR)
   {
     sprintf(responseBuffer,
-      "<ROOT>\n" \
-          "\t<meta name=\"MCU\" content=\"ESP8266\">\n"\
-          "\t<meta name=\"BOARD\" content=\"ESP-01\">\n"\
-          "\t<meta name=\"DEVICE\" content=\"DHT11v1.0\">\n"\
-          "\t<meta result=\"DEVICE\" content=\"DHT11v1.0\">\n"\
-          "<MESUREMENT>\n"\
-              "\t\t<Item type=\"Temperature\" value=\"N/A\" />"\
-              "\t\t<Item type=\"Humidity\" value=\"N/A\" />"\
-          "\t</MESUREMENT>\n"\
-      "</ROOT>"\
+      "<html>\n" \
+          "\t<head>\n"\
+          "\t\t<meta name=\"MCU\" content=\"ESP8266\">\n"\
+          "\t\t<meta name=\"BOARD\" content=\"ESP-01\">\n"\
+          "\t\t<meta name=\"DEVICE\" content=\"DHT11v1.0\">\n"\
+          "\t\t<meta http-equiv=\"refresh\" content=\"5\">\n"
+          "\t</head>\n"\
+          "\t<body>\n"\
+              "\t\t<p>Temperature=%5.2f</p>\n"\
+              "\t\t<p>Humidity=%5.2f</p>\n"\ 
+          "\t</body>\n"\
+      "</html>"\
       ,temp,humidity);
   }
   Serial.println(responseBuffer);
