@@ -9,69 +9,94 @@
 #define STAPSK  "kimhaksoo"
 #endif
 
+//buffer size
 #define MAX_RESPONSE_LENGTH 4096
 
+// features
+#define REPORT_VIA_LED
+#undef REPORT_VIA_SERIAL
+
+// LED feature 
+#define ESP01_BUILTIN_LED_IO_PIN 1  // in case of TX-LED , Pinnumber is 1 otherwise pinnumber is 2
+#define LED_ON 0
+#define LED_OFF 1
+
+// DHT11 Feature
+#define ESP01_DTH11_IO_PIN 2 //GPIO 2
 
 enum renderType{ERROR,HTML,XML,JSON};
+
+char responseBuffer[MAX_RESPONSE_LENGTH];
 const char* ssid = STASSID;
 const char* password = STAPSK;
-char responseBuffer[MAX_RESPONSE_LENGTH];
-renderType g_responseType=HTML;
 
+renderType g_responseType=HTML;
+const int led = ESP01_BUILTIN_LED_IO_PIN; // Do not USE LED
+
+// create objects
 ESP8266WebServer server(80);
-#define DTH11_ESP01_IO_PIN 2
 DHTesp dht;
 
 
+// declare functions
 int buildResponse(renderType,float,float);
 int responseTemp(renderType);
-//const int led = 13; // Do not USE LED
+int blinkLED(int perioday);
 
-void handleRoot() {
-  //digitalWrite(led, 1);
-  server.send(200, "text/plain", "hello from esp8266!");
-  //digitalWrite(led, 0);
-}
-
-void handleNotFound() {
-  //digitalWrite(led, 1);
-  String message = "File Not Found\n\n";
-  message += "URI: ";
-  message += server.uri();
-  message += "\nMethod: ";
-  message += (server.method() == HTTP_GET) ? "GET" : "POST";
-  message += "\nArguments: ";
-  message += server.args();
-  message += "\n";
-  for (uint8_t i = 0; i < server.args(); i++) {
-    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
-  }
-  server.send(404, "text/plain", message);
-  //digitalWrite(led, 0);
-}
 
 void setup(void) {
-  //pinMode(led, OUTPUT);
-  //digitalWrite(led, 0);
+#ifdef REPORT_VIA_LED
+  pinMode(led, OUTPUT);
+  for(int i=0;i<2;i++)
+  {
+    blinkLED(2000);
+    delay(500);
+  }
+#endif
+#ifdef REPORT_VIA_SERIAL
   Serial.begin(115200);
+#endif
+
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
-  dht.setup(DTH11_ESP01_IO_PIN, DHTesp::DHT11);
+  dht.setup(ESP01_DTH11_IO_PIN, DHTesp::DHT11);
+
+#ifdef REPORT_VIA_SERIAL
   Serial.println("\n\n\n\n");
   Serial.print("Wifi Connecting .");
+#endif
+
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+    delay(1000);
+#ifdef REPORT_VIA_SERIAL
     Serial.print(".");
+#endif
+#ifdef REPORT_VIA_LED
+  for(int i=0;i<3;i++)
+  {
+    blinkLED(100);
+    delay(50);
   }
+#endif
+
+  }
+
+#ifdef REPORT_VIA_SERIAL
   Serial.println("");
   Serial.print("Connected to ");
   Serial.println(ssid);
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+#endif
+
+
 
   if (MDNS.begin("esp8266")) {
+#ifdef REPORT_VIA_SERIAL
     Serial.println("MDNS responder started");
+#endif
+
   }
 
   server.on("/", handleRoot);
@@ -82,10 +107,12 @@ void setup(void) {
 
   server.on("/Temp/xml", []() {
     responseTemp(XML);
+    blinkLED(200);
   });
 
   server.on("/Temp/html", []() {
     responseTemp(HTML);
+    blinkLED(200);
   });  
   server.on("/gif", []() {
     static const uint8_t gif[] PROGMEM = {
@@ -102,13 +129,46 @@ void setup(void) {
     gif_colored[17] = millis() % 256;
     gif_colored[18] = millis() % 256;
     server.send(200, "image/gif", gif_colored, sizeof(gif_colored));
+    blinkLED(200);
+    
   });
 
   server.onNotFound(handleNotFound);
-
   server.begin();
+#ifdef REPORT_VIA_SERIAL
   Serial.println("HTTP server started");
+#endif
+
+
+#ifdef REPORT_VIA_LED
+  delay(1000);
+  for(int i=0;i<3;i++)
+  {
+    blinkLED(1000);
+    delay(200);
+  }
+#endif
+
 }
+
+
+
+void loop(void) {
+  server.handleClient();
+  MDNS.update();
+}
+
+
+
+
+
+
+
+
+
+
+
+
 int responseTemp(renderType type)
 {
   
@@ -139,8 +199,10 @@ int responseTemp(renderType type)
       g_responseType = ERROR;
       buildResponse(-1.0,-1.0);
     }
-    Serial.println("response");
-    
+#ifdef REPORT_VIA_SERIAL
+      Serial.println("response");
+#endif
+
     if(g_responseType == XML)
       server.send(200, "text/xml", responseBuffer);
     else if(g_responseType == HTML || g_responseType==ERROR)
@@ -198,15 +260,42 @@ int buildResponse(float temp,float  humidity)
       "</html>"\
       ,temp,humidity);
   }
+#ifdef REPORT_VIA_SERIAL
   Serial.println(responseBuffer);
+#endif
   return 1;
 }
 
 
+int blinkLED(int period)
+{
+#ifdef REPORT_VIA_LED
+  digitalWrite(led, LED_ON);
+  delay(period);
+  digitalWrite(led, LED_OFF);
+#else
+  delay(period);
+#endif
+ 
+}
+void handleRoot() {
+  server.send(200, "text/plain", "hello from esp8266!");
+  blinkLED(200);
+}
 
-
-
-void loop(void) {
-  server.handleClient();
-  MDNS.update();
+void handleNotFound() {
+ 
+  String message = "File Not Found\n\n";
+  message += "URI: ";
+  message += server.uri();
+  message += "\nMethod: ";
+  message += (server.method() == HTTP_GET) ? "GET" : "POST";
+  message += "\nArguments: ";
+  message += server.args();
+  message += "\n";
+  for (uint8_t i = 0; i < server.args(); i++) {
+    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  }
+  server.send(404, "text/plain", message);
+  blinkLED(200);
 }
