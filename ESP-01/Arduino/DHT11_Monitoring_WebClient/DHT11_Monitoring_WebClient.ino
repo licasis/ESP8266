@@ -15,7 +15,8 @@
 #include <WiFiClient.h>
 #include "DHTesp.h"
 
-#define SERVER_URL "http://192.168.0.101/"
+#define SERVER_URL "http://192.168.0.40:9000"
+#define APP_PATH "/homeAuto/report/TempAndHumi/"
 #define ESP01_DHT11_IO_PIN 2 //GPIO 2  , LED 1개 짜리 ESP-01은 LED, DTH11 모두 GPIO 2번을 사용한다. 
 
 
@@ -127,8 +128,8 @@ void buildPayload(char * buffer)
 
   byte mac[6];
   WiFi.macAddress(mac);
-  sprintf(buffer,"%sTempInfomation?ID=%x%x%x%x%x%x&Temperater=%5.2f&Humidity=%5.2f",
-                SERVER_URL,
+  sprintf(buffer,"%s%s%x%x%x%x%x%x/?temperature=%5.2f&humidity=%5.2f",
+                SERVER_URL,APP_PATH,
                 mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],
                 g_temp,g_humi
                 );
