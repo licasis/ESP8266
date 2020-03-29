@@ -28,7 +28,7 @@
 #define RX_PIN GPIO3
 
 #define ESP01_2_LEDs_TYPE
-// #define ESP01_1_LEDs_TYPE
+#undef  ESP01_1_LEDs_TYPE
 
 #ifdef ESP01_2_LEDs_TYPE
 #define LED_PIN_NO GPIO1 // ESP01 2 LED type은 LED가 GPIO 1(TX)과 연결 되어있다
@@ -210,7 +210,7 @@ void buildPayload(char * buffer)
 
   byte mac[6];
   WiFi.macAddress(mac);
-  sprintf(buffer,"%s%s%02x%02x%02x%02x%02x%02x/DHT11/?temperature=%5.2f&humidity=%5.2f",
+  sprintf(buffer,"%s%s%02x%02x%02x%02x%02x%02x/DHT11/?TEMPERATURE=%5.2f&HUMIDITY=%5.2f",
                 SERVER_URL,APP_PATH,
                 mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],
                 g_temp,g_humi
