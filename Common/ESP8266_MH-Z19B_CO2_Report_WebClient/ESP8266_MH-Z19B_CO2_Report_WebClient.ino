@@ -17,7 +17,7 @@
 #define PROTOCOL "http://"
 #define SERVER "192.168.0.40"
 #define PORT 9000
-#define APP_PATH "homeAuto/report/CO2"
+#define APP_PATH "homeAuto/report"
 
 #undef USE_ESP_01
 #define  USE_NODE_MCU
@@ -113,7 +113,7 @@ int  getCO2Level();
 #define PROTOCOL "http://"
 #define SERVER "192.168.0.40"
 #define PORT 9000
-#define APP_PATH "homeAuto/report/CO2"
+#define APP_PATH "/homeAuto/report"
 
 void setup() {
   sprintf(reportMessage,"http://192.168.0.40:9000/homeAuto/report/CO2/122345678/?level=-1&maximum=5000");
@@ -248,20 +248,23 @@ void loop() {
 #define PROTOCOL "http://"
 #define SERVER "192.168.0.40"
 #define PORT 9000
-#define APP_PATH "homeAuto/report/CO2"
+#define APP_PATH "homeAuto/report/"
 */
+///homeAuto/report/bcddc263f2a5/MH-Z19B/?CO2=1234
+//\homeAuto/report/CO2/bcddc263f2a5/?level=1017&maximum=5000
 void buildReport(int level)
 {
   reportMessage;
   byte mac[6];
   WiFi.macAddress(mac);
-  sprintf(reportMessage,"%s%s:%d/%s/%02x%02x%02x%02x%02x%02x/?level=%d&maximum=5000",
+  sprintf(reportMessage,"%s%s:%d%s/%02x%02x%02x%02x%02x%02x/%s/?CO2=%.2f",
                 PROTOCOL,
                 SERVER,
                 PORT,
                 APP_PATH,
                 mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],
-                level);
+                CO2_SENSOR_MODULE,
+                (float)level);
 }
 
 int getCO2Level()
