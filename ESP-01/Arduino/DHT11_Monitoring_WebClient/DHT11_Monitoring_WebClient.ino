@@ -16,7 +16,7 @@
 #include "DHTesp.h"
 
 #define SERVER_URL "http://192.168.0.40:9000"
-#define APP_PATH "/homeAuto/report/TempAndHumi/"
+#define APP_PATH "/homeAuto/report/"
 
 
 #define GPIO0 0 //ESP01 GPIO0 PIN
@@ -57,7 +57,7 @@ DHTesp dht;
 
 float g_humi=0.0;
 float g_temp=0.0;
-
+int   g_count = 0;
 
 int getInfo(float * temp ,float *humi);
 void buildPayload(char * );;
@@ -108,7 +108,11 @@ void loop() {
     Serial.print("[HTTP] begin...\n");
 #endif
 
-    getInfo(&g_temp,&g_humi);
+    if(g_count==0)
+    {
+      getInfo(&g_temp,&g_humi);
+      g_count++;
+    }
     buildPayload(bufferPayload);
 
 #ifdef REPORT_VIA_SERIAL
@@ -177,8 +181,10 @@ void loop() {
     }
 #endif 
   }
-
-  delay(10000);
+  if(g_count==0)
+      delay(10000);
+  else 
+      delay(2000);
 }
 int getInfo(float * temp ,float *humi)
 {
@@ -208,13 +214,28 @@ int getInfo(float * temp ,float *humi)
 void buildPayload(char * buffer)
 {
 
+#define SERVER_URL "http://192.168.0.40:9000"
+#define APP_PATH "/homeAuto/report/"
   byte mac[6];
   WiFi.macAddress(mac);
-  sprintf(buffer,"%s%s%02x%02x%02x%02x%02x%02x/DHT11/?TEMPERATURE=%5.2f&HUMIDITY=%5.2f",
+  if(g_count==1)
+  {
+  sprintf(buffer,"%s%s%02x%02x%02x%02x%02x%02x/DHT11/TEMPERATURE/%5.2f/",
                 SERVER_URL,APP_PATH,
                 mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],
-                g_temp,g_humi
+                g_temp
                 );
+     g_count++;
+  }
+  else if(g_count==2)
+  {
+    sprintf(buffer,"%s%s%02x%02x%02x%02x%02x%02x/DHT11/HUMIDITY/%5.2f/",
+                SERVER_URL,APP_PATH,
+                mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],
+                g_humi
+                );
+     g_count=0;
+  }
 }
 int blinkLED(int period)
 {

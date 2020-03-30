@@ -151,6 +151,7 @@ void setup() {
   WiFiMulti.addAP("WirelessWorld_11n", "kimhaksoo");
 }
 
+int gCO2Level = 0;
 void loop() {
 
 
@@ -158,7 +159,18 @@ void loop() {
   // wait for WiFi connection
   if ((WiFiMulti.run() == WL_CONNECTED)) {
 
-    buildReport(getCO2Level());
+    gCO2Level = getCO2Level();
+    if(gCO2Level<0)
+    {
+      for(int i=0;i<5;i++)
+      {
+        blinkLED(200);
+        delay(50);
+      }
+      delay(repeat_period);
+      return;
+    }
+    buildReport(gCO2Level);
     WiFiClient client;
 
     HTTPClient http;
@@ -236,28 +248,15 @@ void loop() {
   }
   delay(repeat_period);
 }
-/*
-#define SERVER_URL "http://192.168.0.40:9000"
-#define APP_PATH "/homeAuto/report/CO2/"
 
 
-#define SERVER_URL "http://192.168.0.40:9000"
-#define APP_PATH "/homeAuto/report/TempAndHumi/"
-
-
-#define PROTOCOL "http://"
-#define SERVER "192.168.0.40"
-#define PORT 9000
-#define APP_PATH "homeAuto/report/"
-*/
-///homeAuto/report/bcddc263f2a5/MH-Z19B/?CO2=1234
-//\homeAuto/report/CO2/bcddc263f2a5/?level=1017&maximum=5000
+// /homeAuto/report/bcddc263f2a5/MH-Z19B/CO2/845.00/
 void buildReport(int level)
 {
   reportMessage;
   byte mac[6];
   WiFi.macAddress(mac);
-  sprintf(reportMessage,"%s%s:%d%s/%02x%02x%02x%02x%02x%02x/%s/?CO2=%.2f",
+  sprintf(reportMessage,"%s%s:%d%s/%02x%02x%02x%02x%02x%02x/%s/CO2/%.2f/",
                 PROTOCOL,
                 SERVER,
                 PORT,
