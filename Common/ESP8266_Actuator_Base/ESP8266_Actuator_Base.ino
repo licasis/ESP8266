@@ -86,11 +86,11 @@
 #define SERVER "192.168.0.40"
 #define PORT 9000
 #define APP_PATH "homeAuto/request"
-#define MODULE_NAME "WS2812B"
+
 
 #define SERIAL_BAUD_RATE 115200
-
-
+#define MODULE_COMPONENT_COUNT 1
+#define MODULE_NAME "ESP01-RELAY"
 
 //////////////////////////
 //structure & enums
@@ -142,7 +142,7 @@ ESP8266WiFiMulti WiFiMulti;
 int  blinkLED(int period);
 int handleResponse(String *response);
 int fillComponentInfo(String *raw,Component * pComponent);
-
+int doHandleComponent(Component * pComponent,int nCount);
 
 
 void setup() {
@@ -315,8 +315,7 @@ typedef struct _tComponent
  */
 int handleResponse(String *response)
 {
-
-  //omponent#0:COLOR->#3355ff;component#1:COLOR->#3355ff;
+  //component#0:$ORDER->$VALUE;component#1:$ORDER->$VALUE;
   nComponent = 0;
   int start_index = 0;
   int find_index = 0;
@@ -332,11 +331,33 @@ int handleResponse(String *response)
     start_index = find_index +1;
     nComponent++;
   }
+  doHandleComponent(components,nComponent);
   return 0; // means OK.
 }
+
+int doHandleComponent(Component * pComponent,int nCount)
+{
+  int max_led_count = (MODULE_COMPONENT_COUNT<nCount)?MODULE_COMPONENT_COUNT:nCount;
+  for(int i=0;i<max_led_count;i++)
+  {
+
+    if((pComponent+i)->order == ON)
+    {
+      
+    }
+    else if ((pComponent+i)->order == OFF)
+    {
+      
+    }
+      return -1;
+
+  }
+  return 0;
+}
+
 int fillComponentInfo(String *raw,Component * pComponent)
 {
-  //component#1:COLOR->#3355ff;
+  //component#1:ORDER->VALUE;
   int start_index=0;
   int end_index=0;
   int order=-1;
